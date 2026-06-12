@@ -1,0 +1,1207 @@
+openapi: 3.0.3
+info:
+  title: Appify API
+  description: 'API for a social platform supporting posts, likes, comments, replies, and comment likes. Implements JWT Bearer authentication with short-lived auth tokens and refresh tokens, HATEOAS _links, and consistent paginated response envelopes.'
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/
+    description: Local Server
+  - url: https://api.example.com/v1
+    description: Primary server
+
+tags:
+  - name: Auth
+    description: Registration and login operations
+  - name: Posts
+    description: Post creation, retrieval, update, and deletion
+  - name: PostLikes
+    description: Like and unlike posts
+  - name: Comments
+    description: Comment on posts
+  - name: CommentReplies
+    description: Replies to comments
+  - name: CommentLikes
+    description: Like and unlike comments
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ─── AUTH ────────────────────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDTO'
+            example:
+              email: john@example.com
+              password: P@ssw0rd!
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDTO'
+            example:
+              first_name: John
+              last_name: Doe
+              email: john@example.com
+              password: P@ssw0rd!
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                request_id: req_abc123
+                status_code: 201
+                data: null
+                meta: null
+                _links: {}
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ─── POSTS ───────────────────────────────────────────────────────────────────
+
+  /posts:
+    get:
+      tags: [Posts]
+      summary: List all posts (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Paginated list of posts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Post'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+                      _links:
+                        $ref: '#/components/schemas/PaginationLinks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Posts]
+      summary: Create a new post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateDTO'
+            example:
+              content: Hello world!
+              image: https://cdn.example.com/images/photo.jpg
+              status: public
+      responses:
+        '201':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Post'
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          comments:
+                            type: string
+                            example: https://api.example.com/v1/posts/1/comments
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /posts/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Posts]
+      summary: Get a single post by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Post entity
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Post'
+                      _links:
+                        type: object
+                        properties:
+                          posts:
+                            type: string
+                            example: https://api.example.com/v1/posts
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Posts]
+      summary: Update a post (author only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdateDTO'
+      responses:
+        '200':
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Post'
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          posts:
+                            type: string
+                            example: https://api.example.com/v1/posts
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Posts]
+      summary: Delete a post (author only)
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Post deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── POST LIKES ──────────────────────────────────────────────────────────────
+
+  /posts/{post_id}/likes:
+    parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [PostLikes]
+      summary: List users who liked a post (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LikesLimitParam'
+      responses:
+        '200':
+          description: Paginated list of likes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LikeEntity'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+                      _links:
+                        $ref: '#/components/schemas/PaginationLinks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [PostLikes]
+      summary: Toggle like / unlike on a post
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data: {}
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          comments:
+                            type: string
+                            example: https://api.example.com/v1/posts/1/comments
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── COMMENTS ────────────────────────────────────────────────────────────────
+
+  /posts/{post_id}/comments:
+    parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Comments]
+      summary: List comments on a post (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Paginated list of comments
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Comment'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+                      _links:
+                        $ref: '#/components/schemas/PaginationLinks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Comments]
+      summary: Create a comment on a post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateDTO'
+            example:
+              content: Great post!
+              image: https://cdn.example.com/images/reaction.jpg
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Comment'
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          comments:
+                            type: string
+                            example: https://api.example.com/v1/posts/1/comments
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{post_id}/comments/{id}:
+    parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Comments]
+      summary: Get a single comment
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Single comment entity
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Comment'
+                      _links:
+                        type: object
+                        properties:
+                          all_comments:
+                            type: string
+                            example: https://api.example.com/v1/posts/1/comments
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Comments]
+      summary: Update a comment (author only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentUpdateDTO'
+      responses:
+        '200':
+          description: Updated comment
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Comment'
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          posts:
+                            type: string
+                            example: https://api.example.com/v1/posts
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Comments]
+      summary: Delete a comment (author only)
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Comment deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── COMMENT REPLIES ─────────────────────────────────────────────────────────
+
+  /comments/{comment_id}/replies:
+    parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [CommentReplies]
+      summary: List replies to a comment (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Paginated list of replies
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Reply'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+                      _links:
+                        $ref: '#/components/schemas/PaginationLinks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [CommentReplies]
+      summary: Create a reply to a comment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplyCreateDTO'
+            example:
+              content: Totally agree!
+              image: https://cdn.example.com/images/reaction.jpg
+      responses:
+        '201':
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Reply'
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          comments:
+                            type: string
+                            example: https://api.example.com/v1/posts/1/comments
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /comments/{comment_id}/replies/{id}:
+    parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [CommentReplies]
+      summary: Get a single reply
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Single reply entity
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Reply'
+                      _links:
+                        type: object
+                        properties:
+                          all_replies:
+                            type: string
+                            example: https://api.example.com/v1/comments/1/replies
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [CommentReplies]
+      summary: Update a reply (author only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplyUpdateDTO'
+      responses:
+        '200':
+          description: Updated reply
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Reply'
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          posts:
+                            type: string
+                            example: https://api.example.com/v1/posts
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [CommentReplies]
+      summary: Delete a reply (author only)
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Reply deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── COMMENT LIKES ───────────────────────────────────────────────────────────
+
+  /comments/{comment_id}/likes:
+    parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [CommentLikes]
+      summary: List users who liked a comment (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LikesLimitParam'
+      responses:
+        '200':
+          description: Paginated list of comment likes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LikeEntity'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+                      _links:
+                        $ref: '#/components/schemas/PaginationLinks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [CommentLikes]
+      summary: Toggle like / unlike on a comment
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data: {}
+                      meta:
+                        type: object
+                        nullable: true
+                        example: null
+                      _links:
+                        type: object
+                        properties:
+                          comments:
+                            type: string
+                            example: https://api.example.com/v1/posts/1/comments
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ─── COMPONENTS ──────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # ── Enums ──────────────────────────────────────────────────────────────────
+
+    PostStatusEnum:
+      type: string
+      enum:
+        - private
+        - public
+      default: private
+
+    # ── Auth ───────────────────────────────────────────────────────────────────
+
+    LoginDTO:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    RegisterDTO:
+      type: object
+      required: [first_name, last_name, email, password]
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          description: Must pass password strength validation
+
+    LoginResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+          example: req_abc123
+        status_code:
+          type: integer
+          example: 200
+        data:
+          type: object
+          properties:
+            auth_token:
+              type: string
+              description: JWT — expires in 30 minutes
+            refresh_token:
+              type: string
+              description: Opaque refresh token — expires in 7 days
+        meta:
+          type: object
+          nullable: true
+          example: null
+        _links:
+          type: object
+
+    TokenPayload:
+      type: object
+      description: Claims embedded in the auth_token JWT
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+
+    # ── Domain entities ────────────────────────────────────────────────────────
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, first_name, last_name, email]
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+          description: URL of the uploaded image
+        status:
+          $ref: '#/components/schemas/PostStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, content, status]
+
+    PostCreateDTO:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+          description: URL of the pre-uploaded image (upload elsewhere first)
+        status:
+          $ref: '#/components/schemas/PostStatusEnum'
+
+    PostUpdateDTO:
+      type: object
+      properties:
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+          description: URL of the pre-uploaded image
+        status:
+          $ref: '#/components/schemas/PostStatusEnum'
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        image:
+          type: string
+          nullable: true
+          description: URL of the uploaded image
+        post_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Self-reference for threaded comments; null for top-level comments
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, text, post_id, user_id]
+
+    CommentCreateDTO:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+          description: URL of the pre-uploaded image
+
+    CommentUpdateDTO:
+      type: object
+      properties:
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+
+    Reply:
+      type: object
+      description: A reply is a Comment with parent_id set to the parent comment's id
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        image:
+          type: string
+          nullable: true
+        post_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+          description: ID of the parent comment this reply belongs to
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, text, post_id, user_id, parent_id]
+
+    ReplyCreateDTO:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+          description: URL of the pre-uploaded image
+
+    ReplyUpdateDTO:
+      type: object
+      properties:
+        content:
+          type: string
+        image:
+          type: string
+          nullable: true
+
+    LikeEntity:
+      type: object
+      description: Represents a user who liked a post or comment
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+      required: [user_id, first_name, last_name]
+
+    # ── Response envelope ──────────────────────────────────────────────────────
+
+    SuccessResponse:
+      type: object
+      description: Standard 2xx response envelope
+      properties:
+        request_id:
+          type: string
+          example: req_abc123
+        status_code:
+          type: integer
+          example: 200
+        data: {}
+        meta: {}
+        _links:
+          type: object
+          description: HATEOAS links
+
+    PaginationMeta:
+      type: object
+      properties:
+        limit:
+          type: integer
+          example: 10
+        page:
+          type: integer
+          example: 1
+        total:
+          type: integer
+          example: 42
+      required: [limit, page, total]
+
+    PaginationLinks:
+      type: object
+      properties:
+        prev:
+          type: string
+          nullable: true
+          description: Full API URL of the previous page
+          example: https://api.example.com/v1/posts?page=1&limit=10
+        next:
+          type: string
+          nullable: true
+          description: Full API URL of the next page
+          example: https://api.example.com/v1/posts?page=3&limit=10
+
+  # ── Reusable parameters ────────────────────────────────────────────────────
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-based)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items to return per page
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+
+    LikesLimitParam:
+      name: limit
+      in: query
+      description: Number of like records to return per page
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 100
+
+  # ── Reusable responses ─────────────────────────────────────────────────────
+
+  responses:
+    BadRequest:
+      description: Bad Request — validation error
+      content:
+        application/json:
+          example:
+            request_id: req_abc123
+            status_code: 400
+            message: Validation failed
+            errors:
+              - property: email
+                values:
+                  - email must be a valid email address
+              - property: password
+                values:
+                  - password must be at least 8 characters long
+
+    Unauthorized:
+      description: Unauthorized — missing or invalid token
+      content:
+        application/json:
+          example:
+            request_id: req_abc123
+            status_code: 401
+            message: Unauthorized
+
+    Forbidden:
+      description: Forbidden — authenticated but not allowed
+      content:
+        application/json:
+          example:
+            request_id: req_abc123
+            status_code: 403
+            message: Forbidden
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          example:
+            request_id: req_abc123
+            status_code: 404
+            message: Resource not found
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          example:
+            request_id: req_abc123
+            status_code: 500
+            message: Internal Server Error
+
+  examples: {}
