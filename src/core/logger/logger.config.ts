@@ -7,6 +7,10 @@ export const logger = WinstonModule.createLogger({
       filename: 'logs/combined.log',
       level: 'info',
     }),
+    new winston.transports.File({
+      filename: 'logs/errors.log',
+      level: 'error',
+    }),
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.timestamp(),

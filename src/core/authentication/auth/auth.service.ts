@@ -1,11 +1,11 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
-
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PasswordHelper } from 'src/common/helpers/password.helper';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersService } from 'src/modules/users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { TokenHelper } from './token.helper';
 
+@Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
@@ -14,15 +14,7 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.usersService.findByEmailWithPassword(dto.email);
-    if (existing) throw new ConflictException('Email already in use');
-
     await this.usersService.create(dto);
-
-    return {
-      message: 'Registration successfully',
-      data: null,
-    };
   }
 
   async login(email: string, password: string) {

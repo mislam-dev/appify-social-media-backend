@@ -28,11 +28,16 @@ export class UsersService {
     return user;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
   /** Returns user WITH password for auth verification only */
   async findByEmailWithPassword(email: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) throw new NotFoundException(`User not found`);
-    return user;
+    return this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'password', 'first_name', 'last_name'],
+    });
   }
 
   async usersForPostLikes(userIds: string[]) {
