@@ -31,7 +31,6 @@ security:
   - bearerAuth: []
 
 paths:
-
   # ─── AUTH ────────────────────────────────────────────────────────────────────
 
   /auth/login:
@@ -810,7 +809,6 @@ components:
       bearerFormat: JWT
 
   schemas:
-
     # ── Enums ──────────────────────────────────────────────────────────────────
 
     PostStatusEnum:

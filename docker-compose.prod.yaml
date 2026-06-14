@@ -1,0 +1,92 @@
+services:
+  api_prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    expose:
+      - "3000"
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres_prod
+      BULL_REDIS_HOST: redis_prod
+      CACHE_REDIS_HOST: redis_prod
+    restart: unless-stopped
+    command: node dist/src/main.js
+    depends_on:
+      postgres_prod:
+        condition: service_healthy
+      redis_prod:
+        condition: service_healthy
+    networks:
+      - appify_default_prod
+    deploy:
+      replicas: 4
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: "1G"
+        reservations:
+          cpus: "0.75"
+          memory: "512M"
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: dms-nginx
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api_prod
+    networks:
+      - appify_default_prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  postgres_prod:
+    image: postgres:16-alpine
+    container_name: appify-database-production
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appify
+    ports:
+      - "5432:5432"
+    volumes:
+      - appify_postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - appify_default_prod
+
+  redis_prod:
+    image: redis/redis-stack:latest
+    container_name: appify-redis-production
+    ports:
+      - "6379:6379"
+      - "8002:8001"
+    volumes:
+      - appify_redis_prod_data:/data
+    restart: always
+    networks:
+      - appify_default_prod
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  appify_postgres_prod_data:
+  appify_redis_prod_data:
+
+networks:
+  appify_default_prod:
+    driver: bridge

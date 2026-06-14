@@ -1,0 +1,47 @@
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+
+import { PasswordHelper } from 'src/common/helpers/password.helper';
+import { User } from 'src/modules/users/entities/user.entity';
+import { UsersService } from 'src/modules/users/users.service';
+import { RegisterDto } from './dto/register.dto';
+import { TokenHelper } from './token.helper';
+
+export class AuthService {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly tokenService: TokenHelper,
+    private readonly passwordHelper: PasswordHelper,
+  ) {}
+
+  async register(dto: RegisterDto) {
+    const existing = await this.usersService.findByEmailWithPassword(dto.email);
+    if (existing) throw new ConflictException('Email already in use');
+
+    await this.usersService.create(dto);
+
+    return {
+      message: 'Registration successfully',
+      data: null,
+    };
+  }
+
+  async login(email: string, password: string) {
+    const user = await this.usersService.findByEmailWithPassword(email);
+    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    const valid = await this.passwordHelper.verify(password, user.password);
+    if (!valid) throw new UnauthorizedException('Invalid credentials');
+
+    const tokens = this.tokenService.generate({
+      sub: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+    });
+    return tokens;
+  }
+
+  getMe(user: User) {
+    return user;
+  }
+}

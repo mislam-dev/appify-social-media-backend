@@ -1,0 +1,70 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: appify_api
+    ports:
+      - 3000:3000
+    env_file: .env
+    volumes:
+      - .:/app
+      - ./node_modules:/app/node_modules
+      - ./logs:/app/logs
+    environment:
+      DB_HOST: postgres
+      BULL_REDIS_HOST: redis
+      CACHE_REDIS_HOST: redis
+    restart: unless-stopped
+    command: pnpm start:dev
+    networks:
+      - appify_default
+    depends_on:
+      - postgres
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: "4G"
+        reservations:
+          cpus: "1"
+          memory: "2G"
+  postgres:
+    image: postgres:16-alpine
+    container_name: appify-database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appify
+    ports:
+      - "5432:5432"
+    volumes:
+      - appify_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - appify_default
+
+  redis:
+    image: redis/redis-stack:latest
+    container_name: appify-redis
+    ports:
+      - "6379:6379"
+      - "8002:8001"
+    volumes:
+      - appify_redis_data:/data
+    restart: always
+    networks:
+      - appify_default
+
+volumes:
+  appify_data:
+  appify_redis_data:
+
+networks:
+  appify_default:
+    driver: bridge
