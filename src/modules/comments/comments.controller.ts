@@ -9,15 +9,18 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { AuthUser } from 'src/core/authentication/auth/decorators/user.decorator';
+import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard';
 import { User } from 'src/modules/users/entities/user.entity';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('posts/:post_id/comments')
+@UseGuards(JwtAuthGuard)
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 

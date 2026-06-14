@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
 import { AppModule } from './app.module';
+import { TransformInterceptor } from './core/interceptors';
 import { logger, LoggingInterceptor } from './core/logger';
 import { validationPipe } from './core/pipes/validation.pipe';
 import { setupSwagger } from './core/swagger/swagger.config';
@@ -15,7 +16,10 @@ async function bootstrap() {
 
   setupSwagger(app);
 
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(
+    new TransformInterceptor(),
+    new LoggingInterceptor(),
+  );
 
   await app.listen(PORT);
 }

@@ -38,7 +38,7 @@ export class PostsService {
     return {
       data: results,
       meta: this.paginationHelper.meta(total, page, limit),
-      links: this.paginationHelper.links('/posts', page, limit, total),
+      _links: this.paginationHelper.links('/posts', page, limit, total),
     };
   }
 
