@@ -24,8 +24,7 @@ export class PostsService {
       user_id: userId,
       status: dto.status ?? PostStatus.PUBLIC,
     });
-    const saved = await this.postRepository.save(post);
-    return saved;
+    return this.postRepository.save(post);
   }
 
   async findAll(page: number = 1, limit: number = 10) {
