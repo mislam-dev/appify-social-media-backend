@@ -322,7 +322,12 @@ paths:
                   - $ref: '#/components/schemas/SuccessResponse'
                   - type: object
                     properties:
-                      data: {}
+                      data:
+                        type: object
+                        properties:
+                          liked:
+                            type: boolean
+
                       meta:
                         type: object
                         nullable: true
@@ -781,7 +786,11 @@ paths:
                   - $ref: '#/components/schemas/SuccessResponse'
                   - type: object
                     properties:
-                      data: {}
+                      data:
+                        type: object
+                        properties:
+                          liked:
+                            type: boolean
                       meta:
                         type: object
                         nullable: true
@@ -989,7 +998,7 @@ components:
       type: object
       required: [content]
       properties:
-        content:
+        text:
           type: string
         image:
           type: string
@@ -999,7 +1008,7 @@ components:
     CommentUpdateDTO:
       type: object
       properties:
-        content:
+        text:
           type: string
         image:
           type: string
@@ -1039,7 +1048,7 @@ components:
       type: object
       required: [content]
       properties:
-        content:
+        text:
           type: string
         image:
           type: string
@@ -1049,7 +1058,7 @@ components:
     ReplyUpdateDTO:
       type: object
       properties:
-        content:
+        text:
           type: string
         image:
           type: string
@@ -1059,13 +1068,19 @@ components:
       type: object
       description: Represents a user who liked a post or comment
       properties:
-        user_id:
+        created_at:
           type: string
-          format: uuid
-        first_name:
-          type: string
-        last_name:
-          type: string
+          format: date-time
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            first_name:
+              type: string
+            last_name:
+              type: string
       required: [user_id, first_name, last_name]
 
     # ── Response envelope ──────────────────────────────────────────────────────
