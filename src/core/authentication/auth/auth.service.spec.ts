@@ -1,8 +1,9 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { PasswordHelper } from 'src/common/helpers/password.helper';
 import { UsersService } from 'src/modules/users/users.service';
 import { AuthService } from './auth.service';
+import { TokenHelper } from './token.helper';
 
 const mockUser = {
   id: 'user-uuid',
@@ -19,8 +20,15 @@ const mockUsersService = {
   create: jest.fn(),
 };
 
-const mockJwtService = {
-  sign: jest.fn().mockReturnValue('mock-token'),
+const mockTokenHelper = {
+  generate: jest
+    .fn()
+    .mockReturnValue({ auth_token: 'mock-auth', refresh_token: 'mock-refresh' }),
+};
+
+const mockPasswordHelper = {
+  hash: jest.fn(),
+  verify: jest.fn(),
 };
 
 describe('AuthService', () => {
@@ -31,7 +39,8 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: UsersService, useValue: mockUsersService },
-        { provide: JwtService, useValue: mockJwtService },
+        { provide: TokenHelper, useValue: mockTokenHelper },
+        { provide: PasswordHelper, useValue: mockPasswordHelper },
       ],
     }).compile();
 
@@ -41,37 +50,32 @@ describe('AuthService', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('register', () => {
-    it('should register a new user and return tokens', async () => {
-      mockUsersService.findByEmailWithPassword.mockResolvedValue(null);
+    it('should call usersService.create with the provided dto', async () => {
       mockUsersService.create.mockResolvedValue(mockUser);
-
-      const result = await service.register({
-        email: mockUser.email,
-        password: 'password123',
-        first_name: mockUser.first_name,
-        last_name: mockUser.last_name,
-      });
-
-      expect(result.status_code).toBe(201);
-      expect(result.data).toHaveProperty('auth_token');
-      expect(result.data).toHaveProperty('refresh_token');
+      const dto = {
+        email: 'a@b.com',
+        password: 'pass1234',
+        first_name: 'A',
+        last_name: 'B',
+      };
+      await service.register(dto as any);
+      expect(mockUsersService.create).toHaveBeenCalledWith(dto);
     });
 
-    it('should throw ConflictException if email already in use', async () => {
-      mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
-      await expect(
-        service.register({
-          email: mockUser.email,
-          password: 'password123',
-          first_name: 'Test',
-          last_name: 'User',
-        }),
-      ).rejects.toThrow(ConflictException);
+    it('should return undefined (register has no return value)', async () => {
+      mockUsersService.create.mockResolvedValue(mockUser);
+      const result = await service.register({
+        email: 'a@b.com',
+        password: 'pass1234',
+        first_name: 'A',
+        last_name: 'B',
+      } as any);
+      expect(result).toBeUndefined();
     });
   });
 
   describe('login', () => {
-    it('should throw UnauthorizedException if user not found', async () => {
+    it('should throw UnauthorizedException if user is not found', async () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(null);
       await expect(service.login('bad@email.com', 'pass')).rejects.toThrow(
         UnauthorizedException,
@@ -80,18 +84,37 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if password is wrong', async () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
+      mockPasswordHelper.verify.mockResolvedValue(false);
       await expect(
         service.login(mockUser.email, 'wrong-password'),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should return auth_token and refresh_token on valid credentials', async () => {
+      mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
+      mockPasswordHelper.verify.mockResolvedValue(true);
+      const result = await service.login(mockUser.email, 'correct-password');
+      expect(result).toHaveProperty('auth_token');
+      expect(result).toHaveProperty('refresh_token');
+    });
+
+    it('should call tokenHelper.generate with the correct payload', async () => {
+      mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
+      mockPasswordHelper.verify.mockResolvedValue(true);
+      await service.login(mockUser.email, 'correct-password');
+      expect(mockTokenHelper.generate).toHaveBeenCalledWith({
+        sub: mockUser.id,
+        email: mockUser.email,
+        first_name: mockUser.first_name,
+        last_name: mockUser.last_name,
+      });
+    });
   });
 
   describe('getMe', () => {
-    it('should return the current user wrapped in response envelope', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    it('should return the user object directly', () => {
       const result = service.getMe(mockUser as any);
-      expect(result.status_code).toBe(200);
-      expect(result.data).toEqual(mockUser);
+      expect(result).toEqual(mockUser);
     });
   });
 });
