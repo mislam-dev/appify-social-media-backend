@@ -23,8 +23,14 @@ export class CommentLikesController {
   findAll(
     @Param('comment_id') commentId: string,
     @Query() { page, limit }: PaginationDto,
+    @AuthUser() user: User,
   ) {
-    return this.commentLikesService.findAllByComment(commentId, page, limit);
+    return this.commentLikesService.findAllByComment(
+      user.id,
+      commentId,
+      page,
+      limit,
+    );
   }
 
   @Post()

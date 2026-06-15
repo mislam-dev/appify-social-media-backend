@@ -23,8 +23,9 @@ export class PostLikesController {
   findAll(
     @Param('post_id') postId: string,
     @Query() { page, limit }: PaginationDto,
+    @AuthUser() user: User,
   ) {
-    return this.postLikesService.findAllByPost(postId, page, limit);
+    return this.postLikesService.findAllByPost(user.id, postId, page, limit);
   }
 
   @Post()

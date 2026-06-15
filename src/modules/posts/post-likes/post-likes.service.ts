@@ -30,7 +30,7 @@ export class PostLikesService {
     return { liked: true };
   }
 
-  async findAllByPost(postId: string, page = 1, limit = 10) {
+  async findAllByPost(userId: string, postId: string, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
 
     const [likes, total] = await this.postLikeRepository.findAndCount({
@@ -50,9 +50,18 @@ export class PostLikesService {
       },
     });
 
+    const isUserLiked = await this.postLikeRepository.count({
+      where: { post_id: postId, user_id: userId },
+    });
+
+    const metaObject = {
+      ...this.paginationHelper.meta(total, page, limit),
+      is_liked: isUserLiked > 0,
+    };
+
     return {
       data: likes,
-      meta: this.paginationHelper.meta(total, page, limit),
+      meta: metaObject,
       links: this.paginationHelper.links(
         `/posts/${postId}/likes`,
         page,

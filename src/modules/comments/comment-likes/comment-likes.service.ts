@@ -30,7 +30,12 @@ export class CommentLikesService {
     return { liked: true };
   }
 
-  async findAllByComment(commentId: string, page = 1, limit = 10) {
+  async findAllByComment(
+    userId: string,
+    commentId: string,
+    page = 1,
+    limit = 10,
+  ) {
     const offset = (page - 1) * limit;
 
     const [likes, total] = await this.commentLikeRepository.findAndCount({
@@ -49,10 +54,16 @@ export class CommentLikesService {
         },
       },
     });
+    const isUserLiked = await this.commentLikeRepository.count({
+      where: { comment_id: commentId, user_id: userId },
+    });
 
     return {
       data: likes,
-      meta: this.paginationHelper.meta(total, page, limit),
+      meta: {
+        ...this.paginationHelper.meta(total, page, limit),
+        is_liked: isUserLiked > 0,
+      },
       links: this.paginationHelper.links(
         `/comments/${commentId}/likes`,
         page,
