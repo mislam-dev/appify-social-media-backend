@@ -28,6 +28,18 @@ export class UsersService {
     return user;
   }
 
+  /** Returns only the user's first and last name */
+  async findBasicInfo(
+    id: string,
+  ): Promise<Pick<User, 'first_name' | 'last_name'>> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: ['first_name', 'last_name'],
+    });
+    if (!user) throw new NotFoundException(`User #${id} not found`);
+    return user;
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
   }

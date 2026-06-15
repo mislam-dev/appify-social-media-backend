@@ -26,6 +26,8 @@ tags:
     description: Replies to comments
   - name: CommentLikes
     description: Like and unlike comments
+  - name: Users
+    description: User profile retrieval
 
 security:
   - bearerAuth: []
@@ -90,6 +92,39 @@ paths:
                 _links: {}
         '400':
           $ref: '#/components/responses/BadRequest'
+
+  # ─── USERS ───────────────────────────────────────────────────────────────────
+
+  /users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Users]
+      summary: Get a user's first and last name by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User's basic info (first and last name only)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserBasicInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   # ─── POSTS ───────────────────────────────────────────────────────────────────
 
@@ -915,6 +950,16 @@ components:
           type: string
           format: date-time
       required: [id, first_name, last_name, email]
+
+    UserBasicInfo:
+      type: object
+      description: Minimal user profile — first and last name only
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+      required: [first_name, last_name]
 
     Post:
       type: object
