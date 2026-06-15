@@ -28,6 +28,8 @@ tags:
     description: Like and unlike comments
   - name: Users
     description: User profile retrieval
+  - name: FileUpload
+    description: Direct image uploads to Cloudinary (images only)
 
 security:
   - bearerAuth: []
@@ -843,6 +845,102 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
+
+  /file-upload:
+    post:
+      tags: [FileUpload]
+      summary: Upload a single image to Cloudinary
+      description: >-
+        Uploads one image directly to Cloudinary. Only image files are accepted
+        (jpeg, png, webp, gif), with a maximum size of 5 MB. Send the file as
+        multipart/form-data under the field name `file`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (jpeg, png, webp, or gif), max 5 MB
+      responses:
+        '201':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Image uploaded successfully
+                      data:
+                        $ref: '#/components/schemas/UploadedImage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+
+  /file-upload/multiple:
+    post:
+      tags: [FileUpload]
+      summary: Upload multiple images to Cloudinary
+      description: >-
+        Uploads up to 10 images directly to Cloudinary in a single request.
+        Only image files are accepted (jpeg, png, webp, gif), each with a
+        maximum size of 5 MB. Send the files as multipart/form-data under the
+        repeated field name `files`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: string
+                    format: binary
+                  description: Image files (jpeg, png, webp, or gif), max 5 MB each
+      responses:
+        '201':
+          description: Images uploaded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Images uploaded successfully
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UploadedImage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+
 # ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
 components:
@@ -1146,6 +1244,31 @@ components:
           type: object
           description: HATEOAS links
 
+    UploadedImage:
+      type: object
+      description: Metadata returned by Cloudinary for an uploaded image
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://res.cloudinary.com/demo/image/upload/v1700000000/uploads/sample.jpg
+        public_id:
+          type: string
+          example: uploads/sample
+        format:
+          type: string
+          example: jpg
+        width:
+          type: integer
+          example: 1200
+        height:
+          type: integer
+          example: 800
+        bytes:
+          type: integer
+          example: 245678
+      required: [url, public_id, format, width, height, bytes]
+
     PaginationMeta:
       type: object
       properties:
@@ -1252,6 +1375,15 @@ components:
             request_id: req_abc123
             status_code: 404
             message: Resource not found
+
+    PayloadTooLarge:
+      description: Payload Too Large — image exceeds the 5 MB limit
+      content:
+        application/json:
+          example:
+            request_id: req_abc123
+            status_code: 413
+            message: File too large
 
     InternalServerError:
       description: Internal Server Error
