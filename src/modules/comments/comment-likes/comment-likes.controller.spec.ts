@@ -31,8 +31,17 @@ describe('CommentLikesController', () => {
     it('should call commentLikesService.findAllByComment with commentId and pagination', async () => {
       const paginated = { data: [], meta: {}, links: {} };
       mockCommentLikesService.findAllByComment.mockResolvedValue(paginated);
-      const result = await controller.findAll('c-uuid', { page: 1, limit: 10 } as any);
-      expect(mockCommentLikesService.findAllByComment).toHaveBeenCalledWith('c-uuid', 1, 10);
+      const result = await controller.findAll(
+        'c-uuid',
+        { page: 1, limit: 10 } as any,
+        mockUser as any,
+      );
+      expect(mockCommentLikesService.findAllByComment).toHaveBeenCalledWith(
+        mockUser.id,
+        'c-uuid',
+        1,
+        10,
+      );
       expect(result).toEqual(paginated);
     });
   });

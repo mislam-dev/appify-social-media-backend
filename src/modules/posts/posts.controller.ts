@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -18,6 +19,7 @@ import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard
 import { User } from 'src/modules/users/entities/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostStatus } from './entities/post.entity';
 import { PostsService } from './posts.service';
 
 @Controller('posts')
@@ -32,15 +34,23 @@ export class PostsController {
   }
 
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    const data = await this.postsService.findAll(query.page, query.limit);
+  async findAll(@AuthUser() user: User, @Query() query: PaginationDto) {
+    const data = await this.postsService.findAll(
+      user.id,
+      query.page,
+      query.limit,
+    );
 
     return { ...data };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(id);
+  async findOne(@AuthUser() user: User, @Param('id') id: string) {
+    const post = await this.postsService.findOne(id);
+    if (post.status === PostStatus.PRIVATE && post.user_id !== user.id) {
+      throw new NotFoundException('Post is not found');
+    }
+    return post;
   }
 
   @Patch(':id')

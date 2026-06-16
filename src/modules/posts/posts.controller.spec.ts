@@ -49,11 +49,14 @@ describe('PostsController', () => {
   });
 
   describe('findAll', () => {
-    it('should call postsService.findAll with page and limit', async () => {
+    it('should call postsService.findAll with the user id, page and limit', async () => {
       const paginated = { data: [mockPost], meta: {}, _links: {} };
       mockPostsService.findAll.mockResolvedValue(paginated);
-      const result = await controller.findAll({ page: 2, limit: 5 } as any);
-      expect(mockPostsService.findAll).toHaveBeenCalledWith(2, 5);
+      const result = await controller.findAll(mockUser as any, {
+        page: 2,
+        limit: 5,
+      } as any);
+      expect(mockPostsService.findAll).toHaveBeenCalledWith(mockUser.id, 2, 5);
       expect(result).toEqual(paginated);
     });
   });
@@ -61,9 +64,20 @@ describe('PostsController', () => {
   describe('findOne', () => {
     it('should call postsService.findOne and return the post', async () => {
       mockPostsService.findOne.mockResolvedValue(mockPost);
-      const result = await controller.findOne('post-uuid');
+      const result = await controller.findOne(mockUser as any, 'post-uuid');
       expect(mockPostsService.findOne).toHaveBeenCalledWith('post-uuid');
       expect(result).toEqual(mockPost);
+    });
+
+    it('should hide another user private post', async () => {
+      mockPostsService.findOne.mockResolvedValue({
+        ...mockPost,
+        status: PostStatus.PRIVATE,
+        user_id: 'other-user',
+      });
+      await expect(
+        controller.findOne(mockUser as any, 'post-uuid'),
+      ).rejects.toThrow('Post is not found');
     });
   });
 

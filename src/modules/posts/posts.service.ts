@@ -27,10 +27,13 @@ export class PostsService {
     return this.postRepository.save(post);
   }
 
-  async findAll(page: number = 1, limit: number = 10) {
+  async findAll(userId: string, page: number = 1, limit: number = 10) {
     const offset = (page - 1) * limit;
     const [results, total] = await this.postRepository.findAndCount({
-      where: { status: PostStatus.PUBLIC },
+      where: [
+        { status: PostStatus.PUBLIC },
+        { status: PostStatus.PRIVATE, user_id: userId },
+      ],
       take: limit,
       skip: offset,
       order: { created_at: 'DESC' },

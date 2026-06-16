@@ -10,6 +10,7 @@ const mockCommentLikeRepo = {
   save: jest.fn(),
   remove: jest.fn(),
   findAndCount: jest.fn(),
+  count: jest.fn().mockResolvedValue(1),
 };
 
 const mockPaginationHelper = {
@@ -73,7 +74,7 @@ describe('CommentLikesService', () => {
       };
       mockCommentLikeRepo.findAndCount.mockResolvedValue([[like], 1]);
 
-      const result = await service.findAllByComment('c-uuid', 1, 10);
+      const result = await service.findAllByComment('u-uuid', 'c-uuid', 1, 10);
       expect(result.data).toEqual([like]);
       expect(result.meta).toBeDefined();
       expect(result.links).toBeDefined();

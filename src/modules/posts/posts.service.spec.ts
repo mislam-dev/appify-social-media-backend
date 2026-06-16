@@ -85,17 +85,30 @@ describe('PostsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return paginated public posts', async () => {
+    it('should return paginated posts visible to the user', async () => {
       mockPostRepo.findAndCount.mockResolvedValue([[mockPost], 1]);
-      const result = await service.findAll(1, 10);
+      const result = await service.findAll('user-uuid', 1, 10);
       expect(result.data).toEqual([mockPost]);
       expect(result.meta).toBeDefined();
       expect(result._links).toBeDefined();
     });
 
+    it('should include public posts and the user own private posts', async () => {
+      mockPostRepo.findAndCount.mockResolvedValue([[mockPost], 1]);
+      await service.findAll('user-uuid', 1, 10);
+      expect(mockPostRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: [
+            { status: PostStatus.PUBLIC },
+            { status: PostStatus.PRIVATE, user_id: 'user-uuid' },
+          ],
+        }),
+      );
+    });
+
     it('should use default page and limit when not provided', async () => {
       mockPostRepo.findAndCount.mockResolvedValue([[], 0]);
-      await service.findAll();
+      await service.findAll('user-uuid');
       expect(mockPostRepo.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({ take: 10, skip: 0 }),
       );

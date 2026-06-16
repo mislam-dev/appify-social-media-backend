@@ -31,8 +31,17 @@ describe('PostLikesController', () => {
     it('should call postLikesService.findAllByPost with postId and pagination', async () => {
       const paginated = { data: [], meta: {}, links: {} };
       mockPostLikesService.findAllByPost.mockResolvedValue(paginated);
-      const result = await controller.findAll('post-uuid', { page: 1, limit: 10 } as any);
-      expect(mockPostLikesService.findAllByPost).toHaveBeenCalledWith('post-uuid', 1, 10);
+      const result = await controller.findAll(
+        'post-uuid',
+        { page: 1, limit: 10 } as any,
+        mockUser as any,
+      );
+      expect(mockPostLikesService.findAllByPost).toHaveBeenCalledWith(
+        mockUser.id,
+        'post-uuid',
+        1,
+        10,
+      );
       expect(result).toEqual(paginated);
     });
   });
