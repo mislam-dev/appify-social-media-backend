@@ -223,6 +223,34 @@ Base URL: `http://localhost:4000`. All routes except `auth/register`,
 Images only: `jpeg/png/webp/gif`, max **5 MB** each, up to **10** per request.
 Returns the Cloudinary URL(s).
 
+## Design decisions & trade-offs
+
+- **Caching is a hard requirement at scale, but not fully enabled yet.** This
+  API is read-heavy and intended to serve millions of users, so Redis-backed
+  caching is essential rather than optional. The building blocks are already in
+  the codebase — `CacheService`, the `HttpCacheInterceptor`, and the
+  `InvalidationInterceptor` — and can be wired up for caching. It hasn't been
+  fully turned on in deployment yet because of the initial plan to ship this as
+  a SaaS platform without managed Redis access; once a Redis instance is
+  available, the existing services can be enabled with minimal changes.
+- **Cloudinary for image storage instead of S3 (cost trade-off).** AWS S3 would
+  be the preferred object store, but Cloudinary was chosen to keep costs down
+  for now. Storing uploads on the server's local filesystem was deliberately
+  avoided — it doesn't survive horizontal scaling or container restarts and
+  would become a liability as traffic grows. Cloudinary keeps storage off the
+  app servers and is straightforward to swap for S3 later.
+- **Likes now, reactions later.** Only the "like" reaction is implemented for
+  the current scope, exposed as a toggle on posts and comments. The
+  `post_likes` / `comment_likes` design is extensible — adding a reaction-type
+  column would let it support other reactions (love, haha, etc.) without
+  reshaping the API.
+- **Docker for the database only, for now.** The local Docker Compose setup is
+  used to run PostgreSQL (and Redis), but the API container isn't relied on yet
+  due to a known issue building the image tied to recent **pnpm** security
+  changes. For now the API is run directly (`pnpm start:dev`) against the
+  containerised database; the `Dockerfile.prod` path is intended for once that
+  pnpm/build issue is resolved.
+
 ## Scripts
 
 ```bash
