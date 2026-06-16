@@ -1,9 +1,7 @@
-import KeyvRedis from '@keyv/redis';
-import { CacheModule } from '@nestjs/cache-manager';
+// import KeyvRedis from '@keyv/redis';
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CacheService } from '../cache/cache.service';
 
 @Global()
 @Module({
@@ -22,21 +20,21 @@ import { CacheService } from '../cache/cache.service';
         poolSize: 40,
       }),
     }),
-    CacheModule.registerAsync({
-      useFactory: (config: ConfigService) => {
-        return {
-          stores: [new KeyvRedis(config.getOrThrow<string>('cache_redis.url'))],
-          isGlobal: true,
-          ttl: 60 * 60 * 24 * 1, // 1 day
-          max: 1000, // 1000 items
-          namespace:
-            config.get<string>('cache_redis.namespace') || 'appifylab_api',
-        };
-      },
-      inject: [ConfigService],
-    }),
+    // CacheModule.registerAsync({
+    //   useFactory: (config: ConfigService) => {
+    //     return {
+    //       stores: [new KeyvRedis(config.getOrThrow<string>('cache_redis.url'))],
+    //       isGlobal: true,
+    //       ttl: 60 * 60 * 24 * 1, // 1 day
+    //       max: 1000, // 1000 items
+    //       namespace:
+    //         config.get<string>('cache_redis.namespace') || 'appifylab_api',
+    //     };
+    //   },
+    //   inject: [ConfigService],
+    // }),
   ],
-  providers: [CacheService],
-  exports: [CacheModule, CacheService],
+  // providers: [CacheService],
+  // exports: [CacheModule, CacheService],
 })
 export class DatabaseModule {}
