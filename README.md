@@ -1,98 +1,251 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Buddy Script — Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS 11 REST API powering the Buddy Script social feed: authentication,
+posts, threaded comments, likes, and Cloudinary-backed image uploads. Built on
+PostgreSQL (TypeORM) with Redis-backed HTTP caching, JWT auth, a uniform
+response envelope, and Swagger/OpenAPI docs.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech stack
 
-## Description
+| Concern              | Choice                                                          |
+| -------------------- | -------------------------------------------------------------- |
+| Framework            | NestJS 11 (Express platform), TypeScript (strict)              |
+| Database / ORM       | PostgreSQL 16 + TypeORM 0.3 (`synchronize: true`, autoload)    |
+| Auth                 | JWT (`@nestjs/jwt` + Passport `passport-jwt`), bcrypt hashing  |
+| Caching              | Redis (Redis Stack) via `cache-manager` + `@keyv/redis`        |
+| Validation           | `class-validator` / `class-transformer` (global ValidationPipe)|
+| File storage         | Cloudinary (`multer` memory upload, image-only)                |
+| Logging              | Winston (`nest-winston`) + request logging interceptor         |
+| API docs             | Swagger / OpenAPI (`@nestjs/swagger`)                           |
+| Tests                | Jest (unit + e2e), Supertest                                   |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Getting started
 
-## Project setup
+### Prerequisites
 
-```bash
-$ pnpm install
-```
+- Node.js 22+ and **pnpm** (via Corepack)
+- PostgreSQL 16 and a Redis instance — or just use Docker Compose (below)
 
-## Compile and run the project
+### Local (with Docker for infra)
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
+cp .env.example .env          # then fill in real values
+docker compose up -d postgres redis   # start infra only
+pnpm start:dev                # watch mode on http://localhost:4000
 ```
 
-## Run tests
+### Full stack with Docker Compose
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+docker compose up --build     # api + postgres + redis
 ```
+
+> **Note:** `main.ts` listens on `PORT` (default **4000**). The dev
+> `docker-compose.yaml` maps host `3000 → container 3000`, so when running the
+> API in Compose set `PORT=3000` (or adjust the port mapping) so the published
+> port matches the listening port. The production `Dockerfile.prod` exposes
+> `3000` and runs `node dist/src/main.js` as a non-root user.
+
+Once running, browse the interactive API docs at **`/docs`** (Swagger UI).
+
+## Environment variables
+
+| Variable                 | Description                                  | Example                          |
+| ------------------------ | -------------------------------------------- | -------------------------------- |
+| `PORT`                   | HTTP port the API listens on (default 4000)  | `4000`                           |
+| `DB_TYPE`                | Database driver                              | `postgres`                       |
+| `DB_HOST`                | Postgres host                                | `localhost`                      |
+| `DB_PORT`                | Postgres port                                | `5432`                           |
+| `DB_USERNAME`            | Postgres user                                | `postgres`                       |
+| `DB_PASSWORD`            | Postgres password                            | `postgres`                       |
+| `DB_NAME`                | Database name                                | `academic_db`                    |
+| `JWT_SECRET`             | Secret used to sign JWTs                      | `change-in-production`           |
+| `JWT_EXPIRES_IN`         | Configured token lifetime                    | `7d`                             |
+| `CLOUDINARY_CLOUD_NAME`  | Cloudinary cloud name                        | `my-cloud`                       |
+| `CLOUDINARY_API_KEY`     | Cloudinary API key                           | `1234567890`                     |
+| `CLOUDINARY_API_SECRET`  | Cloudinary API secret                        | `••••••`                         |
+| `CLOUDINARY_FOLDER`      | Target folder for uploads                    | `uploads`                        |
+| `CACHE_REDIS_HOST`       | Redis host (Compose sets this to `redis`)    | `localhost`                      |
+
+> Issued access tokens currently expire in **30m** and refresh tokens in **7d**
+> (see `token.helper.ts`); `JWT_EXPIRES_IN` is wired through config for the JWT
+> module default.
+
+## Architecture
+
+The codebase follows a layered, feature-modular structure: a **`core/`** layer
+of cross-cutting infrastructure, a **`common/`** layer of shared helpers, and a
+**`modules/`** layer of business domains. Every module is a standard NestJS
+`controller → service → entity (+ DTOs)` slice.
+
+```
+src/
+├── main.ts                  # Bootstrap: CORS, global pipe/filter/interceptors, Swagger
+├── app.module.ts            # Root: Config + Database + Auth + Modules
+├── common/
+│   ├── helpers/             # PasswordHelper (bcrypt)
+│   └── pagination/          # PaginationDto + helpers (page/limit)
+├── core/
+│   ├── authentication/auth/ # JWT auth: controller, service, strategy, guard, decorators
+│   ├── cache/               # Redis HttpCacheInterceptor + InvalidationInterceptor
+│   ├── config/              # registerAs configs (database, jwt, cloudinary, cache-redis)
+│   ├── database/            # TypeOrm + cache-manager wiring (@Global)
+│   ├── filters/             # HttpExceptionFilter
+│   ├── interceptors/        # TransformInterceptor (response envelope)
+│   ├── logger/              # Winston config + LoggingInterceptor
+│   ├── pipes/               # Global ValidationPipe
+│   └── swagger/             # OpenAPI setup + swagger.yaml
+└── modules/
+    ├── users/               # User entity, profile lookup, unique-email validator
+    ├── posts/               # Posts CRUD + post-likes submodule
+    ├── comments/            # Comments CRUD + comment-likes + comment-replies submodules
+    └── file-upload/         # Cloudinary single/multiple image upload
+```
+
+### Cross-cutting behaviour
+
+- **Response envelope.** `TransformInterceptor` wraps every successful response
+  in a consistent shape, so clients always read the same structure:
+
+  ```json
+  {
+    "status_code": 200,
+    "message": "Success",
+    "data": { },
+    "meta": { },
+    "_links": { }
+  }
+  ```
+
+  (`meta` carries pagination; `_links` carries HATEOAS-style links when present.)
+
+- **Validation.** A global `ValidationPipe` validates and transforms all
+  incoming DTOs via `class-validator`. `useContainer` is enabled so custom
+  validators (e.g. `IsEmailUnique`) can inject services.
+- **Errors.** `HttpExceptionFilter` normalises thrown exceptions into the same
+  envelope with the correct status code.
+- **Auth.** Routes are protected per-controller with `JwtAuthGuard`. The
+  `@AuthUser()` / `@User()` decorator injects the authenticated user; the
+  `@Public()` decorator opts a route out of auth.
+- **Caching.** Redis-backed `HttpCacheInterceptor` caches GET responses (1-day
+  TTL, namespace `appifylab_api`); `InvalidationInterceptor` busts related keys
+  on writes.
+- **Logging.** Winston handles structured logs (to `logs/`) and a
+  `LoggingInterceptor` records each request.
+
+## Data model
+
+All entities use UUID primary keys and snake_case columns with TypeORM
+`synchronize: true` (schema auto-syncs in dev — use migrations for production).
+
+- **User** — `id, first_name, last_name, email (unique), password (select:false), created_at, updated_at`
+- **Post** — `id, content, image?, status (public|private, default private), user_id → User, created_at (indexed), updated_at`
+- **Comment** — `id, text, image?, post_id → Post, user_id → User, parent_id? (self-ref for replies), timestamps`
+- **PostLike** — composite PK `(post_id, user_id)`, cascade delete
+- **CommentLike** — composite PK `(comment_id, user_id)`, cascade delete
+
+Feed visibility: `findAll` returns public posts plus the requesting user's own
+private posts, newest first.
+
+## API reference
+
+Base URL: `http://localhost:4000`. All routes except `auth/register`,
+`auth/login`, and the root health check require an
+`Authorization: Bearer <auth_token>` header. Full schemas live in Swagger at
+**`/docs`**.
+
+### Auth (`/auth`)
+
+| Method | Path             | Auth | Description                                            |
+| ------ | ---------------- | ---- | ------------------------------------------------------ |
+| POST   | `/auth/register` | No   | Register a user (`first_name, last_name, email, password ≥8`) |
+| POST   | `/auth/login`    | No   | Log in; returns `{ auth_token, refresh_token }`        |
+| GET    | `/auth/me`       | Yes  | Current authenticated user                             |
+
+### Users (`/users`)
+
+| Method | Path         | Auth | Description            |
+| ------ | ------------ | ---- | ---------------------- |
+| GET    | `/users/:id` | Yes  | Fetch a user profile   |
+
+### Posts (`/posts`)
+
+| Method | Path          | Auth | Description                                         |
+| ------ | ------------- | ---- | -------------------------------------------------- |
+| POST   | `/posts`      | Yes  | Create a post (`content`, optional `image` URL, `status`) |
+| GET    | `/posts`      | Yes  | Paginated feed (`?page=&limit=`)                   |
+| GET    | `/posts/:id`  | Yes  | Single post                                        |
+| PATCH  | `/posts/:id`  | Yes  | Update own post                                    |
+| DELETE | `/posts/:id`  | Yes  | Delete own post                                    |
+
+### Post likes (`/posts/:post_id/likes`)
+
+| Method | Path                       | Auth | Description                       |
+| ------ | -------------------------- | ---- | -------------------------------- |
+| GET    | `/posts/:post_id/likes`    | Yes  | Paginated list of users who liked |
+| POST   | `/posts/:post_id/likes`    | Yes  | Toggle like for current user      |
+
+### Comments (`/posts/:post_id/comments`)
+
+| Method | Path                                | Auth | Description                  |
+| ------ | ----------------------------------- | ---- | ---------------------------- |
+| POST   | `/posts/:post_id/comments`          | Yes  | Add a comment (`text`, `image?`) |
+| GET    | `/posts/:post_id/comments`          | Yes  | Paginated comments           |
+| GET    | `/posts/:post_id/comments/:id`      | Yes  | Single comment               |
+| PATCH  | `/posts/:post_id/comments/:id`      | Yes  | Update a comment             |
+| DELETE | `/posts/:post_id/comments/:id`      | Yes  | Delete a comment             |
+
+### Comment replies (`/comments/:comment_id/replies`)
+
+| Method | Path                                  | Auth | Description           |
+| ------ | ------------------------------------- | ---- | --------------------- |
+| POST   | `/comments/:comment_id/replies`       | Yes  | Reply to a comment    |
+| GET    | `/comments/:comment_id/replies`       | Yes  | Paginated replies     |
+| GET    | `/comments/:comment_id/replies/:id`   | Yes  | Single reply          |
+| PATCH  | `/comments/:comment_id/replies/:id`   | Yes  | Update a reply        |
+| DELETE | `/comments/:comment_id/replies/:id`   | Yes  | Delete a reply        |
+
+### Comment likes (`/comments/:comment_id/likes`)
+
+| Method | Path                              | Auth | Description                |
+| ------ | --------------------------------- | ---- | -------------------------- |
+| GET    | `/comments/:comment_id/likes`     | Yes  | Paginated likers           |
+| POST   | `/comments/:comment_id/likes`     | Yes  | Toggle like for current user |
+
+### File upload (`/file-upload`)
+
+| Method | Path                   | Auth | Description                                       |
+| ------ | ---------------------- | ---- | ------------------------------------------------ |
+| POST   | `/file-upload`         | Yes  | Upload one image (`file`, multipart)             |
+| POST   | `/file-upload/multiple`| Yes  | Upload up to 10 images (`files`, multipart)      |
+
+Images only: `jpeg/png/webp/gif`, max **5 MB** each, up to **10** per request.
+Returns the Cloudinary URL(s).
+
+## Scripts
+
+```bash
+pnpm start            # start
+pnpm start:dev        # watch mode
+pnpm start:prod       # run compiled build (node dist/main)
+pnpm build            # nest build
+pnpm lint             # eslint --fix
+pnpm format           # prettier
+pnpm test             # unit tests (jest)
+pnpm test:e2e         # e2e tests
+pnpm test:cov         # coverage
+```
+
+## Testing
+
+Unit specs live next to their subjects (`*.spec.ts`) covering services,
+controllers, and helpers (password, token, pagination). E2E tests live under
+`test/`. Run `pnpm test` for the unit suite and `pnpm test:e2e` for end-to-end.
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Use `Dockerfile.prod` (multi-stage, non-root, `dist/src/main.js`) with
+`docker-compose.prod.yaml`. Set production-grade secrets for `JWT_SECRET`, the
+database, and Cloudinary, and disable TypeORM `synchronize` in favour of
+migrations before going live.
