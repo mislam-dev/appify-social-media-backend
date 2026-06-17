@@ -13,10 +13,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { AuthUser } from 'src/core/authentication/auth/decorators/user.decorator';
-import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard';
-import { User } from 'src/modules/users/entities/user.entity';
+import { PaginationDto } from '../../common/pagination/pagination.dto';
+import { AuthUser } from '../../core/authentication/auth/decorators/user.decorator';
+import { JwtAuthGuard } from '../../core/authentication/auth/guards/jwt-auth.guard';
+import { User } from '../users/entities/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatus } from './entities/post.entity';

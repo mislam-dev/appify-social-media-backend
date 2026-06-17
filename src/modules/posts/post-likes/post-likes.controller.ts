@@ -8,10 +8,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { PaginationDto } from 'src/common/pagination/pagination.dto';
-import { AuthUser } from 'src/core/authentication/auth/decorators/user.decorator';
-import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard';
-import { User } from 'src/modules/users/entities/user.entity';
+import { PaginationDto } from '../../../common/pagination/pagination.dto';
+import { AuthUser } from '../../../core/authentication/auth/decorators/user.decorator';
+import { JwtAuthGuard } from '../../../core/authentication/auth/guards/jwt-auth.guard';
+import { User } from '../../users/entities/user.entity';
 import { PostLikesService } from './post-likes.service';
 
 @Controller('posts/:post_id/likes')

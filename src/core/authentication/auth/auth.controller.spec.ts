@@ -35,7 +35,7 @@ describe('AuthController', () => {
         first_name: 'A',
         last_name: 'B',
       };
-      await controller.register(dto as any);
+      await controller.register(dto);
       expect(mockAuthService.register).toHaveBeenCalledWith(dto);
     });
 
@@ -46,8 +46,11 @@ describe('AuthController', () => {
         password: 'pass1234',
         first_name: 'A',
         last_name: 'B',
-      } as any);
-      expect(result).toEqual({ message: 'Registration successfully', data: null });
+      });
+      expect(result).toEqual({
+        message: 'Registration successfully',
+        data: null,
+      });
     });
   });
 
@@ -56,8 +59,11 @@ describe('AuthController', () => {
       const tokens = { auth_token: 'tok', refresh_token: 'refresh' };
       mockAuthService.login.mockResolvedValue(tokens);
       const dto = { email: 'a@b.com', password: 'pass1234' };
-      await controller.login(dto as any);
-      expect(mockAuthService.login).toHaveBeenCalledWith(dto.email, dto.password);
+      await controller.login(dto);
+      expect(mockAuthService.login).toHaveBeenCalledWith(
+        dto.email,
+        dto.password,
+      );
     });
 
     it('should return tokens wrapped in data envelope', async () => {
@@ -66,7 +72,7 @@ describe('AuthController', () => {
       const result = await controller.login({
         email: 'a@b.com',
         password: 'pass1234',
-      } as any);
+      });
       expect(result).toEqual({ data: tokens });
     });
   });
@@ -76,7 +82,10 @@ describe('AuthController', () => {
       const user = { id: '1', email: 'a@b.com' };
       mockAuthService.getMe.mockReturnValue(user);
       const result = controller.me({ user } as any);
-      expect(result).toEqual({ message: 'Get user profile success', data: user });
+      expect(result).toEqual({
+        message: 'Get user profile success',
+        data: user,
+      });
     });
   });
 });

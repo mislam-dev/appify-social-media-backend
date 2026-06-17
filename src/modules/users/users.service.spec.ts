@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PasswordHelper } from 'src/common/helpers/password.helper';
+import { PasswordHelper } from '../../common/helpers/password.helper';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -62,7 +62,10 @@ describe('UsersService', () => {
 
       const result = await service.create(dto);
       expect(mockPasswordHelper.hash).toHaveBeenCalledWith('plainpass');
-      expect(mockUserRepo.create).toHaveBeenCalledWith({ ...dto, password: 'hashed' });
+      expect(mockUserRepo.create).toHaveBeenCalledWith({
+        ...dto,
+        password: 'hashed',
+      });
       expect(result).toEqual(mockUser);
     });
   });
@@ -71,13 +74,17 @@ describe('UsersService', () => {
     it('should return a user when found', async () => {
       mockUserRepo.findOne.mockResolvedValue(mockUser);
       const result = await service.findOne('uuid-1');
-      expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { id: 'uuid-1' } });
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'uuid-1' },
+      });
       expect(result).toEqual(mockUser);
     });
 
     it('should throw NotFoundException when user does not exist', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOne('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -123,7 +130,9 @@ describe('UsersService', () => {
       mockUserRepo.createQueryBuilder.mockReturnValue(mockQb);
 
       const result = await service.usersForPostLikes(['uuid-1']);
-      expect(mockQb.where).toHaveBeenCalledWith('user.id IN (:...ids)', { ids: ['uuid-1'] });
+      expect(mockQb.where).toHaveBeenCalledWith('user.id IN (:...ids)', {
+        ids: ['uuid-1'],
+      });
       expect(result).toEqual([mockUser]);
     });
   });

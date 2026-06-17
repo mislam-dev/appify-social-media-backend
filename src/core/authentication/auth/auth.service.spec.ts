@@ -1,7 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PasswordHelper } from 'src/common/helpers/password.helper';
-import { UsersService } from 'src/modules/users/users.service';
+import { PasswordHelper } from '../../../common/helpers/password.helper';
+import { UsersService } from '../../../modules/users/users.service';
 import { AuthService } from './auth.service';
 import { TokenHelper } from './token.helper';
 
@@ -21,9 +21,10 @@ const mockUsersService = {
 };
 
 const mockTokenHelper = {
-  generate: jest
-    .fn()
-    .mockReturnValue({ auth_token: 'mock-auth', refresh_token: 'mock-refresh' }),
+  generate: jest.fn().mockReturnValue({
+    auth_token: 'mock-auth',
+    refresh_token: 'mock-refresh',
+  }),
 };
 
 const mockPasswordHelper = {
@@ -58,7 +59,7 @@ describe('AuthService', () => {
         first_name: 'A',
         last_name: 'B',
       };
-      await service.register(dto as any);
+      await service.register(dto);
       expect(mockUsersService.create).toHaveBeenCalledWith(dto);
     });
 
@@ -69,7 +70,7 @@ describe('AuthService', () => {
         password: 'pass1234',
         first_name: 'A',
         last_name: 'B',
-      } as any);
+      });
       expect(result).toBeUndefined();
     });
   });
@@ -113,7 +114,7 @@ describe('AuthService', () => {
 
   describe('getMe', () => {
     it('should return the user object directly', () => {
-      const result = service.getMe(mockUser as any);
+      const result = service.getMe(mockUser);
       expect(result).toEqual(mockUser);
     });
   });

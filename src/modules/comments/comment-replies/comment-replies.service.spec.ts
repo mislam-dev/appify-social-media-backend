@@ -1,7 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../../common/pagination/pagination.helper';
 import { Comment } from '../entities/comment.entity';
 import { CommentRepliesService } from './comment-replies.service';
 
@@ -62,7 +62,7 @@ describe('CommentRepliesService', () => {
       mockCommentRepo.create.mockReturnValue(mockReply);
       mockCommentRepo.save.mockResolvedValue(mockReply);
 
-      const result = await service.create('parent-uuid', 'user-uuid', dto as any);
+      const result = await service.create('parent-uuid', 'user-uuid', dto);
       expect(mockCommentRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
           parent_id: 'parent-uuid',
@@ -115,13 +115,16 @@ describe('CommentRepliesService', () => {
         'parent-uuid',
         'reply-uuid',
         'user-uuid',
-        { text: 'Updated reply' } as any,
+        { text: 'Updated reply' },
       );
       expect(result.text).toBe('Updated reply');
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
-      mockCommentRepo.findOne.mockResolvedValue({ ...mockReply, user_id: 'other-user' });
+      mockCommentRepo.findOne.mockResolvedValue({
+        ...mockReply,
+        user_id: 'other-user',
+      });
       await expect(
         service.update('parent-uuid', 'reply-uuid', 'user-uuid', {} as any),
       ).rejects.toThrow(ForbiddenException);
@@ -132,12 +135,19 @@ describe('CommentRepliesService', () => {
     it('should remove the reply and return null when user is the owner', async () => {
       mockCommentRepo.findOne.mockResolvedValue({ ...mockReply });
       mockCommentRepo.remove.mockResolvedValue(undefined);
-      const result = await service.remove('parent-uuid', 'reply-uuid', 'user-uuid');
+      const result = await service.remove(
+        'parent-uuid',
+        'reply-uuid',
+        'user-uuid',
+      );
       expect(result).toBeNull();
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
-      mockCommentRepo.findOne.mockResolvedValue({ ...mockReply, user_id: 'other-user' });
+      mockCommentRepo.findOne.mockResolvedValue({
+        ...mockReply,
+        user_id: 'other-user',
+      });
       await expect(
         service.remove('parent-uuid', 'reply-uuid', 'user-uuid'),
       ).rejects.toThrow(ForbiddenException);

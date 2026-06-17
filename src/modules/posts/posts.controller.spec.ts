@@ -42,7 +42,7 @@ describe('PostsController', () => {
     it('should call postsService.create with the user id and dto', async () => {
       mockPostsService.create.mockResolvedValue(mockPost);
       const dto = { content: 'Hello' };
-      const result = await controller.create(mockUser as any, dto as any);
+      const result = await controller.create(mockUser as any, dto);
       expect(mockPostsService.create).toHaveBeenCalledWith(mockUser.id, dto);
       expect(result).toEqual(mockPost);
     });
@@ -55,7 +55,7 @@ describe('PostsController', () => {
       const result = await controller.findAll(mockUser as any, {
         page: 2,
         limit: 5,
-      } as any);
+      });
       expect(mockPostsService.findAll).toHaveBeenCalledWith(mockUser.id, 2, 5);
       expect(result).toEqual(paginated);
     });
@@ -88,7 +88,7 @@ describe('PostsController', () => {
       const result = await controller.update(
         { user: mockUser } as any,
         'post-uuid',
-        { content: 'Updated' } as any,
+        { content: 'Updated' },
       );
       expect(mockPostsService.update).toHaveBeenCalledWith(
         mockUser.id,
@@ -103,7 +103,10 @@ describe('PostsController', () => {
     it('should call postsService.remove with user id and post id', async () => {
       mockPostsService.remove.mockResolvedValue(undefined);
       await controller.remove({ user: mockUser } as any, 'post-uuid');
-      expect(mockPostsService.remove).toHaveBeenCalledWith(mockUser.id, 'post-uuid');
+      expect(mockPostsService.remove).toHaveBeenCalledWith(
+        mockUser.id,
+        'post-uuid',
+      );
     });
   });
 });

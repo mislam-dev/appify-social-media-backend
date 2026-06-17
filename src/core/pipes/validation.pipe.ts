@@ -3,7 +3,7 @@ import {
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
-import { logger } from 'src/core/logger';
+import { logger } from '../logger';
 
 export const validationPipe = new ValidationPipe({
   whitelist: true,

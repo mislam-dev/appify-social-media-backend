@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../../common/pagination/pagination.helper';
 import { IsNull, Repository } from 'typeorm';
 import { Comment } from '../entities/comment.entity';
 import { CreateCommentReplyDto } from './dto/create-comment-reply.dto';

@@ -11,9 +11,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AuthUser } from 'src/core/authentication/auth/decorators/user.decorator';
-import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard';
-import { User } from 'src/modules/users/entities/user.entity';
+import { AuthUser } from '../../../core/authentication/auth/decorators/user.decorator';
+import { JwtAuthGuard } from '../../../core/authentication/auth/guards/jwt-auth.guard';
+import { User } from '../../users/entities/user.entity';
 import { CommentRepliesService } from './comment-replies.service';
 import { CreateCommentReplyDto } from './dto/create-comment-reply.dto';
 import { UpdateCommentReplyDto } from './dto/update-comment-reply.dto';

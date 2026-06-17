@@ -11,7 +11,11 @@ const mockCommentRepliesService = {
 };
 
 const mockUser = { id: 'user-uuid' };
-const mockReply = { id: 'reply-uuid', text: 'Reply text', parent_id: 'parent-uuid' };
+const mockReply = {
+  id: 'reply-uuid',
+  text: 'Reply text',
+  parent_id: 'parent-uuid',
+};
 
 describe('CommentRepliesController', () => {
   let controller: CommentRepliesController;
@@ -37,7 +41,11 @@ describe('CommentRepliesController', () => {
     it('should call commentRepliesService.create with commentId, userId, and dto', async () => {
       mockCommentRepliesService.create.mockResolvedValue(mockReply);
       const dto = { text: 'Reply text' };
-      const result = await controller.create('parent-uuid', mockUser as any, dto as any);
+      const result = await controller.create(
+        'parent-uuid',
+        mockUser as any,
+        dto,
+      );
       expect(mockCommentRepliesService.create).toHaveBeenCalledWith(
         'parent-uuid',
         mockUser.id,
@@ -52,7 +60,11 @@ describe('CommentRepliesController', () => {
       const paginated = { data: [mockReply], meta: {}, _links: {} };
       mockCommentRepliesService.findAll.mockResolvedValue(paginated);
       const result = await controller.findAll('parent-uuid', 1, 10);
-      expect(mockCommentRepliesService.findAll).toHaveBeenCalledWith('parent-uuid', 1, 10);
+      expect(mockCommentRepliesService.findAll).toHaveBeenCalledWith(
+        'parent-uuid',
+        1,
+        10,
+      );
       expect(result).toEqual(paginated);
     });
   });
@@ -77,7 +89,7 @@ describe('CommentRepliesController', () => {
         'parent-uuid',
         'reply-uuid',
         mockUser as any,
-        { text: 'Updated' } as any,
+        { text: 'Updated' },
       );
       expect(mockCommentRepliesService.update).toHaveBeenCalledWith(
         'parent-uuid',

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../../common/pagination/pagination.helper';
 import { CommentLikesService } from './comment-likes.service';
 import { CommentLike } from './entities/comment-like.entity';
 
@@ -25,7 +25,10 @@ describe('CommentLikesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommentLikesService,
-        { provide: getRepositoryToken(CommentLike), useValue: mockCommentLikeRepo },
+        {
+          provide: getRepositoryToken(CommentLike),
+          useValue: mockCommentLikeRepo,
+        },
         { provide: PaginationHelper, useValue: mockPaginationHelper },
       ],
     }).compile();

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../../common/pagination/pagination.helper';
 import { Repository } from 'typeorm';
 import { CommentLike } from './entities/comment-like.entity';
 

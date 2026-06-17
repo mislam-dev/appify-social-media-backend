@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/authentication/auth/guards/jwt-auth.guard';
 import { FileUploadController } from './file-upload.controller';
 import { FileUploadService } from './file-upload.service';
 
@@ -37,7 +37,6 @@ describe('FileUploadController', () => {
   });
 
   it('returns uploaded image data for a single upload', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const file = {} as Express.Multer.File;
     const res = await controller.uploadImage(file);
 

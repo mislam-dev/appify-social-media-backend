@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../../common/pagination/pagination.helper';
 import { CommentLikesController } from './comment-likes.controller';
 import { CommentLikesService } from './comment-likes.service';
 import { CommentLike } from './entities/comment-like.entity';

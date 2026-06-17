@@ -41,7 +41,7 @@ export class FileUploadService {
           resolve(res);
         },
       );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
       stream.end(file.buffer);
     });
 

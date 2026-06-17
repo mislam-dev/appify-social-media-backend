@@ -35,8 +35,12 @@ describe('CommentsController', () => {
     it('should call commentsService.create with postId, userId, and dto', async () => {
       mockCommentsService.create.mockResolvedValue(mockComment);
       const dto = { text: 'Hello' };
-      const result = await controller.create('post-uuid', mockUser as any, dto as any);
-      expect(mockCommentsService.create).toHaveBeenCalledWith('post-uuid', mockUser.id, dto);
+      const result = await controller.create('post-uuid', mockUser as any, dto);
+      expect(mockCommentsService.create).toHaveBeenCalledWith(
+        'post-uuid',
+        mockUser.id,
+        dto,
+      );
       expect(result).toEqual(mockComment);
     });
   });
@@ -45,8 +49,15 @@ describe('CommentsController', () => {
     it('should call commentsService.findAll with postId and pagination', async () => {
       const paginated = { data: [mockComment], meta: {}, links: {} };
       mockCommentsService.findAll.mockResolvedValue(paginated);
-      const result = await controller.findAll('post-uuid', { page: 1, limit: 10 } as any);
-      expect(mockCommentsService.findAll).toHaveBeenCalledWith('post-uuid', 1, 10);
+      const result = await controller.findAll('post-uuid', {
+        page: 1,
+        limit: 10,
+      });
+      expect(mockCommentsService.findAll).toHaveBeenCalledWith(
+        'post-uuid',
+        1,
+        10,
+      );
       expect(result).toEqual(paginated);
     });
   });
@@ -55,7 +66,10 @@ describe('CommentsController', () => {
     it('should call commentsService.findOne with postId and commentId', async () => {
       mockCommentsService.findOne.mockResolvedValue(mockComment);
       const result = await controller.findOne('post-uuid', 'comment-uuid');
-      expect(mockCommentsService.findOne).toHaveBeenCalledWith('post-uuid', 'comment-uuid');
+      expect(mockCommentsService.findOne).toHaveBeenCalledWith(
+        'post-uuid',
+        'comment-uuid',
+      );
       expect(result).toEqual(mockComment);
     });
   });
@@ -68,7 +82,7 @@ describe('CommentsController', () => {
         'post-uuid',
         'comment-uuid',
         mockUser as any,
-        { text: 'Updated' } as any,
+        { text: 'Updated' },
       );
       expect(mockCommentsService.update).toHaveBeenCalledWith(
         'post-uuid',

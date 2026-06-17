@@ -6,7 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { logger } from 'src/core/logger';
+import { logger } from '../logger';
 
 export interface ErrorResponse {
   status_code: number;

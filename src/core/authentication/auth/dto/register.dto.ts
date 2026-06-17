@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { IsEmailUnique } from 'src/modules/users/decorators/is-email-unique.decorator';
+import { IsEmailUnique } from '../../../../modules/users/decorators/is-email-unique.decorator';
 
 export class RegisterDto {
   @IsString()

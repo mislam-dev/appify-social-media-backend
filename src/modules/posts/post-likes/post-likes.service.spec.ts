@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../../common/pagination/pagination.helper';
 import { PostLike } from './entities/post-like.entity';
 import { PostLikesService } from './post-likes.service';
 
@@ -74,7 +74,12 @@ describe('PostLikesService', () => {
       };
       mockPostLikeRepo.findAndCount.mockResolvedValue([[like], 1]);
 
-      const result = await service.findAllByPost('user-uuid', 'post-uuid', 1, 10);
+      const result = await service.findAllByPost(
+        'user-uuid',
+        'post-uuid',
+        1,
+        10,
+      );
       expect(result.data).toEqual([like]);
       expect(result.meta).toBeDefined();
       expect(result.links).toBeDefined();

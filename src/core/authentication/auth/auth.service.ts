@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PasswordHelper } from 'src/common/helpers/password.helper';
-import { User } from 'src/modules/users/entities/user.entity';
-import { UsersService } from 'src/modules/users/users.service';
+import { PasswordHelper } from '../../../common/helpers/password.helper';
+import { User } from '../../../modules/users/entities/user.entity';
+import { UsersService } from '../../../modules/users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { TokenHelper } from './token.helper';
 

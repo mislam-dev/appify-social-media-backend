@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from 'src/core/authentication/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/authentication/auth/guards/jwt-auth.guard';
 import { MAX_IMAGE_COUNT } from './file-upload.constants';
 import { imageValidationPipe, multerImageOptions } from './file-upload.helper';
 import { FileUploadService } from './file-upload.service';

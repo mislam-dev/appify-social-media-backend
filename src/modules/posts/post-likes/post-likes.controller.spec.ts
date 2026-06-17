@@ -15,7 +15,9 @@ describe('PostLikesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PostLikesController],
-      providers: [{ provide: PostLikesService, useValue: mockPostLikesService }],
+      providers: [
+        { provide: PostLikesService, useValue: mockPostLikesService },
+      ],
     }).compile();
 
     controller = module.get<PostLikesController>(PostLikesController);
@@ -33,7 +35,7 @@ describe('PostLikesController', () => {
       mockPostLikesService.findAllByPost.mockResolvedValue(paginated);
       const result = await controller.findAll(
         'post-uuid',
-        { page: 1, limit: 10 } as any,
+        { page: 1, limit: 10 },
         mockUser as any,
       );
       expect(mockPostLikesService.findAllByPost).toHaveBeenCalledWith(
@@ -50,7 +52,10 @@ describe('PostLikesController', () => {
     it('should call postLikesService.toggle with postId and userId', async () => {
       mockPostLikesService.toggle.mockResolvedValue({ liked: true });
       const result = await controller.toggle('post-uuid', mockUser as any);
-      expect(mockPostLikesService.toggle).toHaveBeenCalledWith('post-uuid', mockUser.id);
+      expect(mockPostLikesService.toggle).toHaveBeenCalledWith(
+        'post-uuid',
+        mockUser.id,
+      );
       expect(result).toEqual({ liked: true });
     });
 

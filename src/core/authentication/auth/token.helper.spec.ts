@@ -44,23 +44,42 @@ describe('TokenHelper', () => {
 
     it('should sign auth_token with expiresIn: 30m', () => {
       mockJwtService.sign.mockReturnValue('token');
-      const payload = { sub: 'uuid', email: 'a@b.com', first_name: 'A', last_name: 'B' };
+      const payload = {
+        sub: 'uuid',
+        email: 'a@b.com',
+        first_name: 'A',
+        last_name: 'B',
+      };
       helper.generate(payload);
 
-      expect(mockJwtService.sign).toHaveBeenCalledWith(payload, { expiresIn: '30m' });
+      expect(mockJwtService.sign).toHaveBeenCalledWith(payload, {
+        expiresIn: '30m',
+      });
     });
 
     it('should sign refresh_token with expiresIn: 7d', () => {
       mockJwtService.sign.mockReturnValue('token');
-      const payload = { sub: 'uuid', email: 'a@b.com', first_name: 'A', last_name: 'B' };
+      const payload = {
+        sub: 'uuid',
+        email: 'a@b.com',
+        first_name: 'A',
+        last_name: 'B',
+      };
       helper.generate(payload);
 
-      expect(mockJwtService.sign).toHaveBeenCalledWith(payload, { expiresIn: '7d' });
+      expect(mockJwtService.sign).toHaveBeenCalledWith(payload, {
+        expiresIn: '7d',
+      });
     });
 
     it('should call jwtService.sign exactly twice', () => {
       mockJwtService.sign.mockReturnValue('token');
-      const payload = { sub: 'uuid', email: 'a@b.com', first_name: 'A', last_name: 'B' };
+      const payload = {
+        sub: 'uuid',
+        email: 'a@b.com',
+        first_name: 'A',
+        last_name: 'B',
+      };
       helper.generate(payload);
 
       expect(mockJwtService.sign).toHaveBeenCalledTimes(2);

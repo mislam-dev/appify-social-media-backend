@@ -1,7 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../common/pagination/pagination.helper';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Post, PostStatus } from './entities/post.entity';
 import { PostsService } from './posts.service';
@@ -66,9 +66,18 @@ describe('PostsService', () => {
     });
 
     it('should use provided status when specified', async () => {
-      const dto: CreatePostDto = { content: 'Private post', status: PostStatus.PRIVATE };
-      mockPostRepo.create.mockReturnValue({ ...mockPost, status: PostStatus.PRIVATE });
-      mockPostRepo.save.mockResolvedValue({ ...mockPost, status: PostStatus.PRIVATE });
+      const dto: CreatePostDto = {
+        content: 'Private post',
+        status: PostStatus.PRIVATE,
+      };
+      mockPostRepo.create.mockReturnValue({
+        ...mockPost,
+        status: PostStatus.PRIVATE,
+      });
+      mockPostRepo.save.mockResolvedValue({
+        ...mockPost,
+        status: PostStatus.PRIVATE,
+      });
 
       await service.create('user-uuid', dto);
       expect(mockPostRepo.create).toHaveBeenCalledWith(
@@ -124,7 +133,9 @@ describe('PostsService', () => {
 
     it('should throw NotFoundException when post does not exist', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOne('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -141,7 +152,10 @@ describe('PostsService', () => {
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
-      mockPostRepo.findOne.mockResolvedValue({ ...mockPost, user_id: 'other-user' });
+      mockPostRepo.findOne.mockResolvedValue({
+        ...mockPost,
+        user_id: 'other-user',
+      });
       await expect(
         service.update('user-uuid', 'post-uuid', { content: 'x' }),
       ).rejects.toThrow(ForbiddenException);
@@ -152,12 +166,17 @@ describe('PostsService', () => {
     it('should remove the post when user is the owner', async () => {
       mockPostRepo.findOne.mockResolvedValue({ ...mockPost });
       mockPostRepo.remove.mockResolvedValue(undefined);
-      await expect(service.remove('user-uuid', 'post-uuid')).resolves.toBeUndefined();
+      await expect(
+        service.remove('user-uuid', 'post-uuid'),
+      ).resolves.toBeUndefined();
       expect(mockPostRepo.remove).toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
-      mockPostRepo.findOne.mockResolvedValue({ ...mockPost, user_id: 'other-user' });
+      mockPostRepo.findOne.mockResolvedValue({
+        ...mockPost,
+        user_id: 'other-user',
+      });
       await expect(service.remove('user-uuid', 'post-uuid')).rejects.toThrow(
         ForbiddenException,
       );

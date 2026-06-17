@@ -1,7 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginationHelper } from '../../common/pagination/pagination.helper';
 import { CommentsService } from './comments.service';
 import { Comment } from './entities/comment.entity';
 
@@ -53,7 +53,7 @@ describe('CommentsService', () => {
       mockCommentRepo.create.mockReturnValue({ ...mockComment, ...dto });
       mockCommentRepo.save.mockResolvedValue(mockComment);
 
-      const result = await service.create('post-uuid', 'user-uuid', dto as any);
+      const result = await service.create('post-uuid', 'user-uuid', dto);
       expect(mockCommentRepo.create).toHaveBeenCalledWith({
         ...dto,
         post_id: 'post-uuid',
@@ -98,13 +98,16 @@ describe('CommentsService', () => {
         'post-uuid',
         'comment-uuid',
         'user-uuid',
-        { text: 'Updated text' } as any,
+        { text: 'Updated text' },
       );
       expect(result.text).toBe('Updated text');
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
-      mockCommentRepo.findOne.mockResolvedValue({ ...mockComment, user_id: 'other-user' });
+      mockCommentRepo.findOne.mockResolvedValue({
+        ...mockComment,
+        user_id: 'other-user',
+      });
       await expect(
         service.update('post-uuid', 'comment-uuid', 'user-uuid', {} as any),
       ).rejects.toThrow(ForbiddenException);
@@ -121,7 +124,10 @@ describe('CommentsService', () => {
     });
 
     it('should throw ForbiddenException when user is not the owner', async () => {
-      mockCommentRepo.findOne.mockResolvedValue({ ...mockComment, user_id: 'other-user' });
+      mockCommentRepo.findOne.mockResolvedValue({
+        ...mockComment,
+        user_id: 'other-user',
+      });
       await expect(
         service.remove('post-uuid', 'comment-uuid', 'user-uuid'),
       ).rejects.toThrow(ForbiddenException);

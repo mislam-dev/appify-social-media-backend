@@ -15,7 +15,9 @@ describe('CommentLikesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CommentLikesController],
-      providers: [{ provide: CommentLikesService, useValue: mockCommentLikesService }],
+      providers: [
+        { provide: CommentLikesService, useValue: mockCommentLikesService },
+      ],
     }).compile();
 
     controller = module.get<CommentLikesController>(CommentLikesController);
@@ -33,7 +35,7 @@ describe('CommentLikesController', () => {
       mockCommentLikesService.findAllByComment.mockResolvedValue(paginated);
       const result = await controller.findAll(
         'c-uuid',
-        { page: 1, limit: 10 } as any,
+        { page: 1, limit: 10 },
         mockUser as any,
       );
       expect(mockCommentLikesService.findAllByComment).toHaveBeenCalledWith(
@@ -50,7 +52,10 @@ describe('CommentLikesController', () => {
     it('should call commentLikesService.toggle and return liked: true', async () => {
       mockCommentLikesService.toggle.mockResolvedValue({ liked: true });
       const result = await controller.toggle('c-uuid', mockUser as any);
-      expect(mockCommentLikesService.toggle).toHaveBeenCalledWith('c-uuid', mockUser.id);
+      expect(mockCommentLikesService.toggle).toHaveBeenCalledWith(
+        'c-uuid',
+        mockUser.id,
+      );
       expect(result).toEqual({ liked: true });
     });
 
